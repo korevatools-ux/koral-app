@@ -1,64 +1,93 @@
 import 'package:flutter/material.dart';
 import 'package:koral/app/theme.dart';
+import 'package:koral/features/admin/admin_dashboard_screen.dart';
+import 'package:koral/features/auth/sign_in_screen.dart';
+import 'package:koral/features/briefs/brief_builder_screen.dart';
+import 'package:koral/features/exports/export_center_screen.dart';
+import 'package:koral/features/notifications/notifications_screen.dart';
+import 'package:koral/features/projects/project_list_screen.dart';
+import 'package:koral/features/studio/storyboard_screen.dart';
+import 'package:koral/features/team/team_workspace_screen.dart';
 
-class SignInScreen extends StatelessWidget {
-  const SignInScreen({super.key});
+class AuthGate extends StatefulWidget {
+  const AuthGate({super.key});
+
+  @override
+  State<AuthGate> createState() => _AuthGateState();
+}
+
+class _AuthGateState extends State<AuthGate> {
+  bool _signedIn = true;
+
+  void _handleSignIn() {
+    setState(() {
+      _signedIn = true;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!_signedIn) {
+      return SignInScreen(onSignIn: _handleSignIn);
+    }
+
+    return const KoralHomeShell();
+  }
+}
+
+class KoralHomeShell extends StatefulWidget {
+  const KoralHomeShell({super.key});
+
+  @override
+  State<KoralHomeShell> createState() => _KoralHomeShellState();
+}
+
+class _KoralHomeShellState extends State<KoralHomeShell> {
+  int _index = 0;
+
+  static const List<Widget> screens = [
+    ProjectListScreen(),
+    BriefBuilderScreen(),
+    StoryboardScreen(),
+    ExportCenterScreen(),
+    AdminDashboardScreen(),
+  ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 480),
-            child: Card(
-              color: const Color(0xFF101B2C),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-              child: Padding(
-                padding: const EdgeInsets.all(28),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    const Icon(Icons.auto_awesome, size: 72, color: KoralTheme.coral),
-                    const SizedBox(height: 16),
-                    const Text(
-                      'Welcome to Koral',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 30, fontWeight: FontWeight.w800),
-                    ),
-                    const SizedBox(height: 10),
-                    const Text(
-                      'Build briefs, shape concepts, and move work from idea to publish.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.white70),
-                    ),
-                    const SizedBox(height: 24),
-                    FilledButton.icon(
-                      onPressed: () {},
-                      icon: const Icon(Icons.login),
-                      label: const Text('Continue as demo user'),
-                      style: FilledButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        backgroundColor: KoralTheme.coral,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    OutlinedButton.icon(
-                      onPressed: () {},
-                      icon: const Icon(Icons.key),
-                      label: const Text('Use Google sign-in'),
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
+      appBar: AppBar(
+        title: const Text('Koral Workspace'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.notifications_outlined),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const NotificationsScreen()),
+              );
+            },
           ),
-        ),
+          IconButton(
+            icon: const Icon(Icons.groups_rounded),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const TeamWorkspaceScreen()),
+              );
+            },
+          ),
+        ],
+      ),
+      body: IndexedStack(index: _index, children: screens),
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: _index,
+        onDestinationSelected: (value) => setState(() => _index = value),
+        destinations: const [
+          NavigationDestination(icon: Icon(Icons.folder_open), label: 'Projects'),
+          NavigationDestination(icon: Icon(Icons.edit_document), label: 'Briefs'),
+          NavigationDestination(icon: Icon(Icons.movie_creation_outlined), label: 'Studio'),
+          NavigationDestination(icon: Icon(Icons.download), label: 'Export'),
+          NavigationDestination(icon: Icon(Icons.admin_panel_settings), label: 'Admin'),
+        ],
       ),
     );
   }

@@ -1,67 +1,52 @@
 import 'package:flutter/material.dart';
 import 'package:koral/app/theme.dart';
 
-class ExportCenterScreen extends StatelessWidget {
-  const ExportCenterScreen({super.key});
+class StoryboardScreen extends StatelessWidget {
+  const StoryboardScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final scenes = [
+      'Opening hook with founder story',
+      'Product demo sequence',
+      'Client proof and outcomes',
+      'Final CTA and social cutdown',
+      'Hero stills and campaign overlays',
+    ];
+
     return Padding(
       padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Export center', style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800)),
-          const SizedBox(height: 18),
-          Wrap(
-            spacing: 12,
-            runSpacing: 12,
-            children: [
-              _ExportTile(label: 'Deck', icon: Icons.file_present, color: KoralTheme.coral),
-              _ExportTile(label: 'Document', icon: Icons.description, color: KoralTheme.teal),
-              _ExportTile(label: 'Social bundle', icon: Icons.public, color: Colors.indigo),
-              _ExportTile(label: 'Video scene', icon: Icons.video_library, color: Colors.purple),
-            ],
+          const Text(
+            'Storyboard and scenes',
+            style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800),
           ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ExportTile extends StatelessWidget {
-  final String label;
-  final IconData icon;
-  final Color color;
-
-  const _ExportTile({
-    required this.label,
-    required this.icon,
-    required this.color,
-    super.key,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: 150,
-      height: 120,
-      child: Card(
-        color: color.withOpacity(0.12),
-        child: InkWell(
-          onTap: () {},
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(icon, size: 36, color: color),
-                const SizedBox(height: 10),
-                Text(label, style: const TextStyle(fontWeight: FontWeight.w700)),
-              ],
+          const SizedBox(height: 18),
+          Expanded(
+            child: ListView.builder(
+              itemCount: scenes.length,
+              itemBuilder: (context, index) {
+                return Card(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  child: ListTile(
+                    leading: CircleAvatar(
+                      backgroundColor: KoralTheme.coral.withOpacity(0.2),
+                      child: Text('${index + 1}'),
+                    ),
+                    title: Text(scenes[index]),
+                    subtitle: const Text('Style: cinematic, close-up motion, warm lighting'),
+                    trailing: IconButton(
+                      icon: const Icon(Icons.edit),
+                      onPressed: () {},
+                    ),
+                  ),
+                );
+              },
             ),
           ),
-        ),
+        ],
       ),
     );
   }
