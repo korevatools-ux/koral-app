@@ -354,10 +354,18 @@ String _formatTime(DateTime time) {
 }
 
 
+
 String _safeExportName(String value) {
-  final cleaned = value
-      .trim()
-      .replaceAll(RegExp(r'[\\/:*?"<>|]+'), '-')
-      .replaceAll(RegExp(r'\\s+'), '-');
+  final cleaned = value.trim()
+      .replaceAll(String.fromCharCode(92), '-')
+      .replaceAll('/', '-')
+      .replaceAll(':', '-')
+      .replaceAll('*', '-')
+      .replaceAll('?', '-')
+      .replaceAll('"', '-')
+      .replaceAll('<', '-')
+      .replaceAll('>', '-')
+      .replaceAll('|', '-')
+      .replaceAll(' ', '-');
   return cleaned.isEmpty ? 'koral-export' : cleaned;
 }
