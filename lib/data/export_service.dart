@@ -126,7 +126,7 @@ class KoralExportService {
     );
 
     final encoded = ZipEncoder().encode(archive);
-    if (encoded.isEmpty) {
+    if (encoded == null || encoded.isEmpty) {
       throw StateError('Koral could not package the Word document.');
     }
     return Uint8List.fromList(encoded);
