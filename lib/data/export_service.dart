@@ -49,20 +49,16 @@ class KoralExportService {
   }
 
   List<_SlideDraft> _parseSlides(String outline) {
-    final header = RegExp(
-      '^\\\\s*Slide\\\\s+\\\\d+\\\\s*:\\\\s*(.+)$',
-      caseSensitive: false,
-    );
     final slides = <_SlideDraft>[];
     _SlideDraft? current;
 
-    for (final raw in outline.split(RegExp('\\\\r?\\\\n'))) {
+    for (final raw in outline.split('\\n')) {
       final line = raw.trim();
       if (line.isEmpty || line.toLowerCase().startsWith('notes:')) continue;
 
-      final match = header.firstMatch(line);
-      if (match != null) {
-        current = _SlideDraft(match.group(1)!.trim());
+      final title = _extractSlideTitle(line);
+      if (title != null) {
+        current = _SlideDraft(title);
         slides.add(current);
         continue;
       }
@@ -70,16 +66,24 @@ class KoralExportService {
       current ??= _SlideDraft('Key points');
       if (slides.isEmpty) slides.add(current);
 
-      final bullet = line.replaceFirst(
-        RegExp('^(?:[-*•]|\\\\d+[.)])\\\\s*'),
-        '',
-      );
+      var bullet = line;
+      if (bullet.startsWith('-') ||
+          bullet.startsWith('*') ||
+          bullet.startsWith('•')) {
+        bullet = bullet.substring(1).trim();
+      } else {
+        final period = bullet.indexOf('.');
+        if (period > 0 &&
+            int.tryParse(bullet.substring(0, period).trim()) != null) {
+          bullet = bullet.substring(period + 1).trim();
+        }
+      }
       if (bullet.isNotEmpty) current.bullets.add(bullet);
     }
 
     if (slides.isEmpty) {
       final lines = outline
-          .split(RegExp('\\\\r?\\\\n'))
+          .split('\\n')
           .map((line) => line.trim())
           .where((line) => line.isNotEmpty)
           .take(5)
@@ -88,6 +92,16 @@ class KoralExportService {
     }
 
     return slides;
+  }
+
+  String? _extractSlideTitle(String line) {
+    final colon = line.indexOf(':');
+    if (colon < 0) return null;
+    final prefix = line.substring(0, colon).trim().toLowerCase();
+    if (!prefix.startsWith('slide ')) return null;
+    final number = prefix.substring(6).trim();
+    if (int.tryParse(number) == null) return null;
+    return line.substring(colon + 1).trim();
   }
 }
 
