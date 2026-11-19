@@ -12,7 +12,7 @@ class KoralExportService {
     required String title,
     required String content,
   }) async {
-    final markdown = '# $title\\n\\n${content.trim()}';
+    final markdown = '# $title\n\n${content.trim()}';
     final elements = await MarkdownParser.parse(markdown);
     final document = DocxBuiltDocument(elements: elements);
     final bytes = DocxExporter().exportToBytes(document);
@@ -52,7 +52,7 @@ class KoralExportService {
     final slides = <_SlideDraft>[];
     _SlideDraft? current;
 
-    for (final raw in outline.split('\\n')) {
+    for (final raw in outline.split('\n')) {
       final line = raw.trim();
       if (line.isEmpty || line.toLowerCase().startsWith('notes:')) continue;
 
@@ -83,7 +83,7 @@ class KoralExportService {
 
     if (slides.isEmpty) {
       final lines = outline
-          .split('\\n')
+          .split('\n')
           .map((line) => line.trim())
           .where((line) => line.isNotEmpty)
           .take(5)
