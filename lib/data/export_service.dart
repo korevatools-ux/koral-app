@@ -136,11 +136,10 @@ class KoralExportService {
     required String title,
     required String outline,
   }) async {
-    final presentation = Powerpoint()
+    final presentation = PowerPoint()
       ..title = title
       ..author = 'Koral'
-      ..showSlideNumbers = true
-      ..layout = Layout.screenWide();
+      ..showSlideNumbers = true;
 
     presentation.addTitleSlide(
       title: title.toTextValue(),
