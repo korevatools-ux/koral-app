@@ -158,7 +158,11 @@ class KoralExportService {
       );
     }
 
-    return Uint8List.fromList(await presentation.save());
+    final bytes = await presentation.save();
+    if (bytes == null || bytes.isEmpty) {
+      throw StateError('Koral could not package the PowerPoint presentation.');
+    }
+    return Uint8List.fromList(bytes);
   }
 
   void _addTextFile(Archive archive, String path, String text) {
