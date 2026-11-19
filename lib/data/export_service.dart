@@ -83,7 +83,7 @@ class KoralExportService {
 
     final body = StringBuffer()
       ..write(_paragraph(title, style: 'Title'));
-    for (final raw in content.split('\\n')) {
+    for (final raw in content.split('\n')) {
       final line = raw.trimRight();
       if (line.trim().isEmpty) {
         body.write('<w:p/>');
@@ -184,7 +184,7 @@ class KoralExportService {
     final slides = <_SlideDraft>[];
     _SlideDraft? current;
 
-    for (final raw in outline.split('\\n')) {
+    for (final raw in outline.split('\n')) {
       final line = raw.trim();
       if (line.isEmpty || line.toLowerCase().startsWith('notes:')) continue;
 
@@ -215,7 +215,7 @@ class KoralExportService {
 
     if (slides.isEmpty) {
       final lines = outline
-          .split('\\n')
+          .split('\n')
           .map((line) => line.trim())
           .where((line) => line.isNotEmpty)
           .take(5)
