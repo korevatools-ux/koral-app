@@ -50,13 +50,13 @@ class KoralExportService {
 
   List<_SlideDraft> _parseSlides(String outline) {
     final header = RegExp(
-      r'^\\s*Slide\\s+\\d+\\s*:\\s*(.+)$',
+      r'^\s*Slide\s+\d+\s*:\s*(.+)$',
       caseSensitive: false,
     );
     final slides = <_SlideDraft>[];
     _SlideDraft? current;
 
-    for (final raw in outline.split(RegExp(r'\\r?\\n'))) {
+    for (final raw in outline.split(RegExp(r'\r?\n'))) {
       final line = raw.trim();
       if (line.isEmpty || line.toLowerCase().startsWith('notes:')) continue;
 
@@ -70,13 +70,13 @@ class KoralExportService {
       current ??= _SlideDraft('Key points');
       if (slides.isEmpty) slides.add(current);
 
-      final bullet = line.replaceFirst(RegExp(r'^(?:[-*•]|\\d+[.)])\\s*'), '');
+      final bullet = line.replaceFirst(RegExp(r'^(?:[-*•]|\d+[.)])\s*'), '');
       if (bullet.isNotEmpty) current.bullets.add(bullet);
     }
 
     if (slides.isEmpty) {
       final lines = outline
-          .split(RegExp(r'\\r?\\n'))
+          .split(RegExp(r'\r?\n'))
           .map((line) => line.trim())
           .where((line) => line.isNotEmpty)
           .take(5)
