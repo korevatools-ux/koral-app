@@ -10,9 +10,15 @@ One brief in, finished work out. A Flutter app with a Supabase backend.
 - A daily limit of 40 AI requests per person, enforced on the server. Failed AI calls are refunded. The owner account has no limit.
 - An Owner tab with live totals, visible only to the owner and refused by the database to anyone else.
 
+## Office exports
+
+- Document projects export to genuine Word `.docx` files.
+- Slide projects export to editable PowerPoint `.pptx` files.
+- Export is generated locally from saved Koral output and uses the platform Save As flow.
+
 ## Not built yet
 
-Google sign-in, images, voices and video, exporting real .pptx and .docx files, the Studio scene canvas, offline cache, payments.
+Google sign-in, images, voices and video, the Studio scene canvas, offline cache, payments.
 
 ## Setup
 
