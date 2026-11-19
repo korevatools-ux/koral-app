@@ -1,7 +1,6 @@
 name: Koral Office Export CI
 
 on:
-  push:
   pull_request:
   workflow_dispatch:
 
