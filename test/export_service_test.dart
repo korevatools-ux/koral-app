@@ -44,7 +44,7 @@ void main() {
     final package = ZipDecoder().decodeBytes(bytes);
     final names = package.files.map((file) => file.name).toList();
     final slideFiles = package.files
-        .where((file) => RegExp(r'^ppt/slides/slide\\d+\\.xml$').hasMatch(file.name))
+        .where((file) => RegExp(r'^ppt/slides/slide\d+\.xml$').hasMatch(file.name))
         .toList();
     final slideXml = slideFiles
         .map((file) => utf8.decode(file.content as List<int>))
@@ -66,7 +66,7 @@ void main() {
     );
     final package = ZipDecoder().decodeBytes(bytes);
     final slideFiles = package.files
-        .where((file) => RegExp(r'^ppt/slides/slide\\d+\\.xml$').hasMatch(file.name))
+        .where((file) => RegExp(r'^ppt/slides/slide\d+\.xml$').hasMatch(file.name))
         .toList();
 
     expect(bytes.length, greaterThan(500));
