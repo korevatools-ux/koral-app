@@ -112,3 +112,35 @@ jobs:
           path: Koral-iOS-unsigned.ipa
           if-no-files-found: error
           retention-days: 14
+
+  windows:
+    name: Windows desktop release
+    runs-on: windows-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.0'
+          cache: true
+
+      - name: Generate Windows platform scaffold
+        run: flutter create --platforms=windows .
+
+      - name: Restore dependencies
+        run: flutter pub get
+
+      - name: Build Windows release
+        run: flutter build windows --release
+
+      - name: Package Windows desktop build
+        shell: pwsh
+        run: Compress-Archive -Path build/windows/x64/runner/Release/* -DestinationPath Koral-Windows.zip
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Koral-Windows
+          path: Koral-Windows.zip
+          if-no-files-found: error
+          retention-days: 14
