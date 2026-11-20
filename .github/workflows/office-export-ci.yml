@@ -1,0 +1,146 @@
+name: Koral Office Export CI
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Analyze, test and build Koral web
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Flutter 3.47
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.0'
+          cache: true
+
+      - name: Restore dependencies
+        run: flutter pub get
+
+      - name: Analyze
+        run: flutter analyze
+
+      - name: Run tests
+        run: flutter test --reporter expanded
+
+      - name: Generate web scaffold
+        run: flutter create --platforms=web .
+
+      - name: Build release web app
+        run: flutter build web --release
+
+      - name: Package web build
+        run: tar -czf koral-web.tar.gz -C build/web .
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Koral-Web
+          path: koral-web.tar.gz
+          if-no-files-found: error
+          retention-days: 14
+
+  android:
+    name: Android release APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.0'
+          cache: true
+
+      - name: Generate Android platform scaffold
+        run: flutter create --platforms=android .
+
+      - name: Restore dependencies
+        run: flutter pub get
+
+      - name: Build release APK
+        run: flutter build apk --release
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Koral-Android-APK
+          path: build/app/outputs/flutter-apk/app-release.apk
+          if-no-files-found: error
+          retention-days: 14
+
+  ios:
+    name: iPhone unsigned release app
+    runs-on: macos-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.0'
+          cache: true
+
+      - name: Generate iOS platform scaffold
+        run: flutter create --platforms=ios .
+
+      - name: Restore dependencies
+        run: flutter pub get
+
+      - name: Build unsigned iOS app
+        run: flutter build ios --release --no-codesign
+
+      - name: Package unsigned iOS app
+        run: |
+          mkdir -p Payload
+          cp -R build/ios/iphoneos/Runner.app Payload/
+          zip -qr Koral-iOS-unsigned.ipa Payload
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Koral-iOS-unsigned
+          path: Koral-iOS-unsigned.ipa
+          if-no-files-found: error
+          retention-days: 14
+
+  windows:
+    name: Windows desktop release
+    runs-on: windows-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.0'
+          cache: true
+
+      - name: Generate Windows platform scaffold
+        run: flutter create --platforms=windows .
+
+      - name: Restore dependencies
+        run: flutter pub get
+
+      - name: Build Windows release
+        run: flutter build windows --release
+
+      - name: Package Windows desktop build
+        shell: pwsh
+        run: Compress-Archive -Path build/windows/x64/runner/Release/* -DestinationPath Koral-Windows.zip
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Koral-Windows
+          path: Koral-Windows.zip
+          if-no-files-found: error
+          retention-days: 14
