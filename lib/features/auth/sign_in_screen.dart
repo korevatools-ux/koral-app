@@ -70,7 +70,25 @@ class _SignInScreenState extends State<SignInScreen> {
 
   Future<void> _resetPassword() async {
     final email = _email.text.trim();
-    final validEmail = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+
+    final at = email.indexOf('@');
+    final validEmail = at > 0 && email.indexOf('.', at) > at + 1 && !email.contains(' ');
+    if (!validEmail) {
+      setState(() { _message = 'Enter a valid email address first.'; _messageIsError = true; });
+      return;
+    }
+    setState(() { _busy = true; _message = null; });
+    try {
+      await Supabase.instance.client.auth.resetPasswordForEmail(email);
+      if (mounted) setState(() { _message = 'If an account exists for $email, a password reset link has been sent.'; _messageIsError = false; });
+    } on AuthException catch (e) {
+      if (mounted) setState(() { _message = e.message; _messageIsError = true; });
+    } catch (_) {
+      if (mounted) setState(() { _message = 'Could not request a reset link. Check your connection and try again.'; _messageIsError = true; });
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+  void _toggleMode() {
     setState(() {
       _creating = !_creating;
       _message = null;
@@ -170,185 +188,6 @@ class _SignInScreenState extends State<SignInScreen> {
                                     child: const Text('Forgot password?'),
                                   ),
                                 ),
-                              if (_message != null) ...[
-                                const SizedBox(height: 12),
-                                Text(
-                                  _message!,
-                                  style: TextStyle(
-                                    color: _messageIsError
-                                        ? theme.colorScheme.error
-                                        : Colors.white,
-                                  ),
-                                ),
-                              ],
-                              const SizedBox(height: 20),
-                              FilledButton(
-                                onPressed: _busy ? null : _submit,
-                                style: FilledButton.styleFrom(
-                                  padding:
-                                      const EdgeInsets.symmetric(vertical: 16),
-                                ),
-                                child: _busy
-                                    ? const SizedBox(
-                                        height: 20,
-                                        width: 20,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                          color: Colors.white,
-                                        ),
-                                      )
-                                    : Text(
-                                        _creating ? 'Create account' : 'Sign in',
-                                      ),
-                              ),
-                              const SizedBox(height: 4),
-                              TextButton(
-                                onPressed: _busy ? null : _toggleMode,
-                                child: Text(
-                                  _creating
-                                      ? 'I already have an account'
-                                      : 'Create an account',
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-).hasMatch(email);
-    if (!validEmail) {
-      setState(() {
-        _message = 'Enter a valid email address first.';
-        _messageIsError = true;
-      });
-      return;
-    }
-    setState(() {
-      _busy = true;
-      _message = null;
-    });
-    try {
-      await Supabase.instance.client.auth.resetPasswordForEmail(email);
-      if (mounted) {
-        setState(() {
-          _message = 'If an account exists for $email, a password reset link has been sent.';
-          _messageIsError = false;
-        });
-      }
-    } on AuthException catch (e) {
-      if (mounted) {
-        setState(() {
-          _message = e.message;
-          _messageIsError = true;
-        });
-      }
-    } catch (_) {
-      if (mounted) {
-        setState(() {
-          _message = 'Could not request a reset link. Check your connection and try again.';
-          _messageIsError = true;
-        });
-      }
-    } finally {
-      if (mounted) setState(() => _busy = false);
-    }
-  }
-
-  void _toggleMode() {
-    setState(() {
-      _creating = !_creating;
-      _message = null;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Scaffold(
-      backgroundColor: KoralTheme.coralDeep,
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 420),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const Text(
-                    'Koral',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 56,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: -1.5,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  const Text(
-                    'One brief in, finished work out.',
-                    style: TextStyle(color: Colors.white, fontSize: 18),
-                  ),
-                  const SizedBox(height: 32),
-                  Card(
-                    color: KoralTheme.abyss,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(24),
-                      child: Form(
-                        key: _formKey,
-                        child: AutofillGroup(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              Text(
-                                _creating ? 'Create your account' : 'Sign in',
-                                style: theme.textTheme.titleLarge,
-                              ),
-                              const SizedBox(height: 16),
-                              TextFormField(
-                                controller: _email,
-                                keyboardType: TextInputType.emailAddress,
-                                textInputAction: TextInputAction.next,
-                                autofillHints: const [AutofillHints.email],
-                                decoration:
-                                    const InputDecoration(labelText: 'Email'),
-                                validator: (value) =>
-                                    (value == null || !value.contains('@'))
-                                        ? 'Enter your email address.'
-                                        : null,
-                              ),
-                              const SizedBox(height: 12),
-                              TextFormField(
-                                controller: _password,
-                                obscureText: true,
-                                textInputAction: TextInputAction.done,
-                                autofillHints: [
-                                  _creating
-                                      ? AutofillHints.newPassword
-                                      : AutofillHints.password,
-                                ],
-                                decoration: const InputDecoration(
-                                  labelText: 'Password',
-                                ),
-                                validator: (value) =>
-                                    (value == null || value.length < 8)
-                                        ? 'Use at least 8 characters.'
-                                        : null,
-                                onFieldSubmitted: (_) => _submit(),
-                              ),
                               if (_message != null) ...[
                                 const SizedBox(height: 12),
                                 Text(
