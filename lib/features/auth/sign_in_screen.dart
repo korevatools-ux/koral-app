@@ -16,6 +16,7 @@ class _SignInScreenState extends State<SignInScreen> {
   final _password = TextEditingController();
   bool _creating = false;
   bool _busy = false;
+  bool _obscurePassword = true;
   String? _message;
   bool _messageIsError = false;
 
@@ -67,6 +68,26 @@ class _SignInScreenState extends State<SignInScreen> {
     }
   }
 
+  Future<void> _resetPassword() async {
+    final email = _email.text.trim();
+    final at = email.indexOf('@');
+    final validEmail = at > 0 && email.indexOf('.', at) > at + 1 && !email.contains(' ');
+    if (!validEmail) {
+      setState(() { _message = 'Enter a valid email address first.'; _messageIsError = true; });
+      return;
+    }
+    setState(() { _busy = true; _message = null; });
+    try {
+      await Supabase.instance.client.auth.resetPasswordForEmail(email);
+      if (mounted) setState(() { _message = 'If an account exists for $email, a password reset link has been sent.'; _messageIsError = false; });
+    } on AuthException catch (e) {
+      if (mounted) setState(() { _message = e.message; _messageIsError = true; });
+    } catch (_) {
+      if (mounted) setState(() { _message = 'Could not request a reset link. Check your connection and try again.'; _messageIsError = true; });
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
   void _toggleMode() {
     setState(() {
       _creating = !_creating;
@@ -136,22 +157,37 @@ class _SignInScreenState extends State<SignInScreen> {
                               const SizedBox(height: 12),
                               TextFormField(
                                 controller: _password,
-                                obscureText: true,
+                                obscureText: _obscurePassword,
                                 textInputAction: TextInputAction.done,
                                 autofillHints: [
                                   _creating
                                       ? AutofillHints.newPassword
                                       : AutofillHints.password,
                                 ],
-                                decoration: const InputDecoration(
+                                decoration: InputDecoration(
                                   labelText: 'Password',
+                                  suffixIcon: IconButton(
+                                    tooltip: _obscurePassword ? 'Show password' : 'Hide password',
+                                    onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                                    icon: Icon(_obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined),
+                                  ),
                                 ),
                                 validator: (value) =>
-                                    (value == null || value.length < 8)
-                                        ? 'Use at least 8 characters.'
-                                        : null,
+                                    (value == null || value.isEmpty)
+                                        ? 'Enter your password.'
+                                        : (_creating && value.length < 8)
+                                            ? 'Use at least 8 characters.'
+                                            : null,
                                 onFieldSubmitted: (_) => _submit(),
                               ),
+                              if (!_creating)
+                                Align(
+                                  alignment: Alignment.centerRight,
+                                  child: TextButton(
+                                    onPressed: _busy ? null : _resetPassword,
+                                    child: const Text('Forgot password?'),
+                                  ),
+                                ),
                               if (_message != null) ...[
                                 const SizedBox(height: 12),
                                 Text(

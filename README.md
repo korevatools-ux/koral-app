@@ -9,10 +9,22 @@ One brief in, finished work out. A Flutter app with a Supabase backend.
 - Write a brief, choose what to make (social post, document, slide outline or video script) and a language, then tap **Generate**. The server calls your AI provider and saves the result.
 - A daily limit of 40 AI requests per person, enforced on the server. Failed AI calls are refunded. The owner account has no limit.
 - An Owner tab with live totals, visible only to the owner and refused by the database to anyone else.
+- Real Office exports: document results can be saved as `.docx` and slide outlines as `.pptx`. Files are generated locally from the saved result; the AI content is not sent to a second service.
 
 ## Not built yet
 
-Google sign-in, images, voices and video, exporting real .pptx and .docx files, the Studio scene canvas, offline cache, payments.
+Google sign-in, AI image generation, voice/video generation, the Studio scene canvas, offline cache and payments.
+
+
+## Office exports
+
+Open a project with a generated result and use its download icon:
+
+- **Document projects:** create a real Word `.docx` file.
+- **Slide projects:** create a real PowerPoint `.pptx` deck from the generated slide headings and bullet points.
+- Choose a save location when the platform supports a save dialog. On iOS, use the Files/share flow provided by the platform.
+
+Social posts and video scripts remain copyable text; they are not converted to Word or PowerPoint automatically.
 
 ## Setup
 

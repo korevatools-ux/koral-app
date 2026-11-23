@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:file_saver/file_saver.dart';
 
+import 'package:koral/data/export_service.dart';
 import 'package:koral/data/koral_repository.dart';
 import 'package:koral/data/models.dart';
 
@@ -29,6 +31,8 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
   bool _loading = true;
   bool _saving = false;
   bool _generating = false;
+  bool _exporting = false;
+  final _exporter = const KoralExportService();
   String? _loadError;
 
   @override
@@ -116,6 +120,42 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
     }
   }
 
+  Future<void> _export(Generation generation) async {
+    if (_exporting) return;
+    setState(() => _exporting = true);
+    try {
+      final isSlides = _project.kind == ProjectKind.slides;
+      final bytes = isSlides
+          ? await _exporter.createPowerPoint(
+              title: _project.title,
+              outline: generation.output,
+            )
+          : await _exporter.createWordDocument(
+              title: _project.title,
+              content: generation.output,
+            );
+      final extension = isSlides ? 'pptx' : 'docx';
+      final mimeType = isSlides
+          ? 'application/vnd.openxmlformats-officedocument.presentationml.presentation'
+          : 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+      final savedPath = await FileSaver.instance.saveAs(
+        name: _safeExportName(_project.title),
+        bytes: bytes,
+        fileExtension: extension,
+        mimeType: MimeType.custom,
+        customMimeType: mimeType,
+        dialogTitle: isSlides ? 'Save PowerPoint' : 'Save Word document',
+      );
+      if (mounted && savedPath != null) {
+        _snack('Export saved: $savedPath');
+      }
+    } catch (e) {
+      _snack('Export failed: ${friendlyError(e)}');
+    } finally {
+      if (mounted) setState(() => _exporting = false);
+    }
+  }
+
   Future<void> _delete() async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -168,7 +208,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final text = Theme.of(context).textTheme;
-    final busy = _saving || _generating;
+    final busy = _saving || _generating || _exporting;
     return Scaffold(
       appBar: AppBar(
         title: Text(_project.title),
@@ -287,6 +327,13 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
                         icon: const Icon(Icons.copy),
                         onPressed: () => _copy(generation.output),
                       ),
+                      IconButton(
+                        tooltip: _project.kind == ProjectKind.slides
+                            ? 'Export PowerPoint'
+                            : 'Export Word document',
+                        icon: const Icon(Icons.download_outlined),
+                        onPressed: _exporting ? null : () => _export(generation),
+                      ),
                     ],
                   ),
                   SelectableText(generation.output),
@@ -304,4 +351,21 @@ String _formatTime(DateTime time) {
   String two(int n) => n.toString().padLeft(2, '0');
   return '${local.year}-${two(local.month)}-${two(local.day)} '
       '${two(local.hour)}:${two(local.minute)}';
+}
+
+
+
+String _safeExportName(String value) {
+  final cleaned = value.trim()
+      .replaceAll(String.fromCharCode(92), '-')
+      .replaceAll('/', '-')
+      .replaceAll(':', '-')
+      .replaceAll('*', '-')
+      .replaceAll('?', '-')
+      .replaceAll('"', '-')
+      .replaceAll('<', '-')
+      .replaceAll('>', '-')
+      .replaceAll('|', '-')
+      .replaceAll(' ', '-');
+  return cleaned.isEmpty ? 'koral-export' : cleaned;
 }
